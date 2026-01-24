@@ -34,7 +34,7 @@ public class MercuryCanvas : Canvas
         
         if (mode == BlendMode.SRC_OVER)
         {
-            if (element.Effect is BlendEffect)
+            if (element.Effect is BlendModeEffectBase)
             {
                 element.Effect = null;
                 System.Diagnostics.Debug.WriteLine($"[DEBUG_LOG] Effect cleared for {element.GetType().Name}");
@@ -42,21 +42,23 @@ public class MercuryCanvas : Canvas
             return;
         }
 
-        if (element.Effect is not BlendEffect effect)
+        // Check if we need to change the effect type
+        if (element.Effect is not BlendModeEffectBase effect || GetModeFromEffect(effect) != mode)
         {
-            System.Diagnostics.Debug.WriteLine($"[DEBUG_LOG] Creating NEW BlendEffect for {element.GetType().Name}");
-            effect = new BlendEffect();
+            System.Diagnostics.Debug.WriteLine($"[DEBUG_LOG] Creating NEW effect for {element.GetType().Name}, Mode={mode}");
+            var oldEffect = element.Effect as BlendModeEffectBase;
+            effect = CreateEffectForMode(mode);
+            
+            // Preserve the background brush if it exists
+            if (oldEffect != null && effect != null)
+            {
+                effect.Bkg = oldEffect.Bkg;
+            }
+            
             element.Effect = effect;
         }
 
-        effect.BlendMode = mode;
-        
-        // Final sanity check: if the effect is NOT BlendEffect, WPF might be ignoring it
-        if (element.Effect != effect)
-        {
-             System.Diagnostics.Debug.WriteLine($"[DEBUG_LOG] WARNING: element.Effect was NOT set correctly! Current effect: {element.Effect?.GetType().Name}");
-             element.Effect = effect;
-        }
+        if (effect == null) return;
 
         var bkg = GetBackgroundBrush(element);
         if (bkg == null && GetAutoBackground(element))
@@ -89,6 +91,43 @@ public class MercuryCanvas : Canvas
         {
             effect.Bkg = bkg;
         }
+    }
+
+    private static BlendMode GetModeFromEffect(BlendModeEffectBase effect)
+    {
+        if (effect is AddEffect) return BlendMode.ADD;
+        if (effect is MultiplyEffect) return BlendMode.MULTIPLY;
+        if (effect is ScreenEffect) return BlendMode.SCREEN;
+        if (effect is OverlayEffect) return BlendMode.OVERLAY;
+        if (effect is DarkenEffect) return BlendMode.DARKEN;
+        if (effect is LightenEffect) return BlendMode.LIGHTEN;
+        if (effect is ColorDodgeEffect) return BlendMode.COLOR_DODGE;
+        if (effect is ColorBurnEffect) return BlendMode.COLOR_BURN;
+        if (effect is HardLightEffect) return BlendMode.HARD_LIGHT;
+        if (effect is SoftLightEffect) return BlendMode.SOFT_LIGHT;
+        if (effect is DifferenceEffect) return BlendMode.DIFFERENCE;
+        if (effect is ExclusionEffect) return BlendMode.EXCLUSION;
+        return BlendMode.SRC_OVER;
+    }
+
+    private static BlendModeEffectBase CreateEffectForMode(BlendMode mode)
+    {
+        return mode switch
+        {
+            BlendMode.ADD => new AddEffect(),
+            BlendMode.MULTIPLY => new MultiplyEffect(),
+            BlendMode.SCREEN => new ScreenEffect(),
+            BlendMode.OVERLAY => new OverlayEffect(),
+            BlendMode.DARKEN => new DarkenEffect(),
+            BlendMode.LIGHTEN => new LightenEffect(),
+            BlendMode.COLOR_DODGE => new ColorDodgeEffect(),
+            BlendMode.COLOR_BURN => new ColorBurnEffect(),
+            BlendMode.HARD_LIGHT => new HardLightEffect(),
+            BlendMode.SOFT_LIGHT => new SoftLightEffect(),
+            BlendMode.DIFFERENCE => new DifferenceEffect(),
+            BlendMode.EXCLUSION => new ExclusionEffect(),
+            _ => null
+        };
     }
 
     private VisualBrush CreateElementBrush(FrameworkElement element)
@@ -154,7 +193,7 @@ public class MercuryCanvas : Canvas
         Console.WriteLine($"[DEBUG_LOG] SetupBackground for {element.GetType().Name}, Name={element.Name}");
         ApplyEffect(element);
 
-        if (GetAutoBackground(element) && element.Effect is BlendEffect effect)
+        if (GetAutoBackground(element) && element.Effect is BlendModeEffectBase effect)
         {
             EventHandler handler = (s, e) =>
             {

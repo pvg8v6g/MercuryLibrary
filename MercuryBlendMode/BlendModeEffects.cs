@@ -37,3 +37,57 @@ public class ScreenEffect : BlendModeEffectBase
     private static readonly PixelShader _pixelShader = new() { UriSource = new System.Uri("pack://application:,,,/MercuryBlendMode;component/Shaders/Screen.ps", System.UriKind.Absolute) };
     public ScreenEffect() { this.PixelShader = _pixelShader; }
 }
+
+public class OverlayEffect : BlendModeEffectBase
+{
+    private static readonly PixelShader _pixelShader = new() { UriSource = new System.Uri("pack://application:,,,/MercuryBlendMode;component/Shaders/Overlay.ps", System.UriKind.Absolute) };
+    public OverlayEffect() { this.PixelShader = _pixelShader; }
+}
+
+public class DarkenEffect : BlendModeEffectBase
+{
+    private static readonly PixelShader _pixelShader = new() { UriSource = new System.Uri("pack://application:,,,/MercuryBlendMode;component/Shaders/Darken.ps", System.UriKind.Absolute) };
+    public DarkenEffect() { this.PixelShader = _pixelShader; }
+}
+
+public class LightenEffect : BlendModeEffectBase
+{
+    private static readonly PixelShader _pixelShader = new() { UriSource = new System.Uri("pack://application:,,,/MercuryBlendMode;component/Shaders/Lighten.ps", System.UriKind.Absolute) };
+    public LightenEffect() { this.PixelShader = _pixelShader; }
+}
+
+public class ColorDodgeEffect : BlendModeEffectBase
+{
+    private static readonly PixelShader _pixelShader = new() { UriSource = new System.Uri("pack://application:,,,/MercuryBlendMode;component/Shaders/ColorDodge.ps", System.UriKind.Absolute) };
+    public ColorDodgeEffect() { this.PixelShader = _pixelShader; }
+}
+
+public class ColorBurnEffect : BlendModeEffectBase
+{
+    private static readonly PixelShader _pixelShader = new() { UriSource = new System.Uri("pack://application:,,,/MercuryBlendMode;component/Shaders/ColorBurn.ps", System.UriKind.Absolute) };
+    public ColorBurnEffect() { this.PixelShader = _pixelShader; }
+}
+
+public class HardLightEffect : BlendModeEffectBase
+{
+    private static readonly PixelShader _pixelShader = new() { UriSource = new System.Uri("pack://application:,,,/MercuryBlendMode;component/Shaders/HardLight.ps", System.UriKind.Absolute) };
+    public HardLightEffect() { this.PixelShader = _pixelShader; }
+}
+
+public class SoftLightEffect : BlendModeEffectBase
+{
+    private static readonly PixelShader _pixelShader = new() { UriSource = new System.Uri("pack://application:,,,/MercuryBlendMode;component/Shaders/SoftLight.ps", System.UriKind.Absolute) };
+    public SoftLightEffect() { this.PixelShader = _pixelShader; }
+}
+
+public class DifferenceEffect : BlendModeEffectBase
+{
+    private static readonly PixelShader _pixelShader = new() { UriSource = new System.Uri("pack://application:,,,/MercuryBlendMode;component/Shaders/Difference.ps", System.UriKind.Absolute) };
+    public DifferenceEffect() { this.PixelShader = _pixelShader; }
+}
+
+public class ExclusionEffect : BlendModeEffectBase
+{
+    private static readonly PixelShader _pixelShader = new() { UriSource = new System.Uri("pack://application:,,,/MercuryBlendMode;component/Shaders/Exclusion.ps", System.UriKind.Absolute) };
+    public ExclusionEffect() { this.PixelShader = _pixelShader; }
+}

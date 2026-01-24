@@ -7,8 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Resource Include="Shaders\**\*.ps" />
-        <None Include="Shaders\**\*.hlsl" />
+        <Resource Include="Shaders\*.ps" />
     </ItemGroup>
 
     <ItemGroup>
@@ -16,8 +15,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ClCompile Include="Shaders\Add.hlsl" />
-      <ClCompile Include="Shaders\Multiply.hlsl" />
-      <ClCompile Include="Shaders\Screen.hlsl" />
+      <None Include="Shaders\*.hlsl" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ClCompile Include="Shaders\Difference.hlsl" />
+      <ClCompile Include="Shaders\Exclusion.hlsl" />
     </ItemGroup>
 </Project>
