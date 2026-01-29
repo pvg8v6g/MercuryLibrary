@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+        <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+        <RootNamespace>DemoApp</RootNamespace>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
+        <Platforms>x86;x64;arm64</Platforms>
+        <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+        <PlatformTarget>x64</PlatformTarget>
+        <UseWinUI>true</UseWinUI>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <EnableMsixTooling>true</EnableMsixTooling>
+        <WindowsSdkPackageVersion>10.0.26100.38</WindowsSdkPackageVersion>
+        <WindowsPackageType>None</WindowsPackageType>
+        <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003"/>
+        <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742"/>
+        <Manifest Include="$(ApplicationManifest)"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MercuryLibrary\MercuryLibrary.csproj" />
+    </ItemGroup>
+
+</Project>
