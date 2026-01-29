@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <UseWinUI>true</UseWinUI>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <EnableMsixTooling>true</EnableMsixTooling>
         <WindowsSdkPackageVersion>10.0.26100.38</WindowsSdkPackageVersion>
         <RootNamespace>MercuryLibrary</RootNamespace>
