@@ -40,4 +40,6 @@ public class PictureBox : PropertyChangedUpdater
         get;
         set => SetField(ref field, value);
     } = 1.0f;
+
+
 }

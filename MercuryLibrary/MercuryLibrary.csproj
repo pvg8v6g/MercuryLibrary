@@ -11,6 +11,17 @@
         <WindowsSdkPackageVersion>10.0.26100.38</WindowsSdkPackageVersion>
         <RootNamespace>MercuryLibrary</RootNamespace>
         <AssemblyName>MercuryLibrary</AssemblyName>
+
+        <!-- NuGet Package Properties -->
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>MercuryLibrary</PackageId>
+        <Version>1.0.0</Version>
+        <Authors>Mercury Authors</Authors>
+        <Description>A WinUI 3 component library for Mercury projects.</Description>
+        <PackageProjectUrl>https://github.com/philb/MercuryLibrary</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/philb/MercuryLibrary</RepositoryUrl>
+        <PackageTags>WinUI3;WindowsAppSDK;Mercury</PackageTags>
+        <Copyright>Copyright © 2026</Copyright>
     </PropertyGroup>
 
     <ItemGroup>
