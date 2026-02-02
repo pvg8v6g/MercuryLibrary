@@ -289,7 +289,7 @@ public sealed partial class GameCanvasView
                                 {
                                     fgDs.Clear(Colors.Transparent);
                                     fgDs.DrawImage(bitmap, sprite.X, sprite.Y,
-                                        new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height),
+                                        sprite.Viewport ?? new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height),
                                         sprite.Opacity);
                                 }
 
@@ -323,7 +323,7 @@ public sealed partial class GameCanvasView
                                     using var ds = accumulator.CreateDrawingSession();
                                     ds.Clear(Colors.Transparent);
                                     ds.DrawImage(bitmap, sprite.X, sprite.Y,
-                                        new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height),
+                                        sprite.Viewport ?? new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height),
                                         sprite.Opacity);
                                 }
                                 else
@@ -335,7 +335,7 @@ public sealed partial class GameCanvasView
                                         ds.Clear(Colors.Transparent);
                                         ds.DrawImage(accumulator);
                                         ds.DrawImage(bitmap, sprite.X, sprite.Y,
-                                            new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height),
+                                            sprite.Viewport ?? new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height),
                                             sprite.Opacity);
                                     }
 
