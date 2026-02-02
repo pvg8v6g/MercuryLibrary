@@ -1,23 +1,15 @@
-using System.Collections.ObjectModel;
-using MercuryLibrary.ImageComponents;
-using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.UI.Xaml;
-using Windows.Foundation;
 
 namespace DemoApp;
 
 public sealed partial class MainWindow : Window
 {
+    public MainViewModel ViewModel { get; } = new();
+
     public MainWindow()
     {
         InitializeComponent();
-
-        GameCanvas.Sprites = new ObservableCollection<PictureBox>
-        {
-            new PictureBox { ImagePath = "Graphics/under.png", X = 100, Y = 100, Z = 0 },
-            new PictureBox { ImagePath = "Graphics/moving.png", X = 200, Y = 200, Z = 1, Viewport = new Rect(48, 0, 48, 48) },
-            new PictureBox { ImagePath = "Graphics/over.png", X = 300, Y = 300, Z = 2, BlendMode = BlendEffectMode.LinearDodge }
-        };
+        this.Activated += (s, e) => ViewModel.OnActivatedAction?.Invoke();
     }
 
     private void myButton_Click(object sender, RoutedEventArgs e)

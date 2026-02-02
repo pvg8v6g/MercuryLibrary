@@ -11,6 +11,9 @@
     <!--     <Button x:Name="myButton" Click="myButton_Click">Click Me</Button> -->
     <!-- </StackPanel> -->
     <Grid>
-        <mercury:GameCanvasView x:Name="GameCanvas" UpdateRate="16.66666667" />
+        <mercury:GameCanvasView x:Name="GameCanvas"
+                                UpdateRate="16.66666667"
+                                Sprites="{x:Bind ViewModel.Sprites, Mode=OneWay}"
+                                UpdateCallback="{x:Bind ViewModel.UpdateHandler, Mode=OneWay}" />
     </Grid>
 </Window>

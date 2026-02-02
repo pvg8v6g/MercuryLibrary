@@ -6,6 +6,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d">
     <Grid>
-        <canvas:CanvasAnimatedControl x:Name="InternalCanvas" ClearColor="Black" />
+        <canvas:CanvasAnimatedControl x:Name="InternalCanvas" ClearColor="Black" Paused="False" />
     </Grid>
 </UserControl>

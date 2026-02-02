@@ -37,6 +37,26 @@ public sealed partial class GameCanvasView
         set => SetValue(SpritesProperty, value);
     }
 
+    public static readonly DependencyProperty UpdateCallbackProperty = DependencyProperty.Register(
+        nameof(UpdateCallback),
+        typeof(Action<ICanvasAnimatedControl, CanvasAnimatedUpdateEventArgs>),
+        typeof(GameCanvasView),
+        new PropertyMetadata(null, OnUpdateCallbackChanged));
+
+    private Action<ICanvasAnimatedControl, CanvasAnimatedUpdateEventArgs>? _cachedCallback;
+
+    private static void OnUpdateCallbackChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var view = (GameCanvasView) d;
+        view._cachedCallback = e.NewValue as Action<ICanvasAnimatedControl, CanvasAnimatedUpdateEventArgs>;
+    }
+
+    public Action<ICanvasAnimatedControl, CanvasAnimatedUpdateEventArgs>? UpdateCallback
+    {
+        get => (Action<ICanvasAnimatedControl, CanvasAnimatedUpdateEventArgs>?) GetValue(UpdateCallbackProperty);
+        set => SetValue(UpdateCallbackProperty, value);
+    }
+
     private readonly Dictionary<string, CanvasBitmap> _bitmapCache = new();
     private readonly object _lock = new();
     private double _actualFps;
@@ -48,31 +68,18 @@ public sealed partial class GameCanvasView
 
     public GameCanvasView()
     {
-        this.InitializeComponent();
+        InitializeComponent();
 
-        InternalCanvas.CreateResources += (s, e) =>
-        {
-            try
-            {
-                e.TrackAsyncAction(CreateResourcesAsync(s).AsAsyncAction());
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[DEBUG_LOG] CreateResources error: {ex}");
-            }
-        };
+        InternalCanvas.CreateResources += (s, e) => { e.TrackAsyncAction(CreateResourcesAsync(s).AsAsyncAction()); };
 
         InternalCanvas.Update += (s, e) =>
         {
-            try
-            {
-                _actualFps = 1.0 / e.Timing.ElapsedTime.TotalSeconds;
-                GameUpdate?.Invoke(this, e);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"[DEBUG_LOG] Update error: {ex}");
-            }
+            _actualFps = 1.0 / e.Timing.ElapsedTime.TotalSeconds;
+            GameUpdate?.Invoke(this, e);
+
+            var callback = _cachedCallback;
+            if (callback is null) return;
+            callback.Invoke(s, e);
         };
 
         InternalCanvas.Draw += OnDrawInternal;
@@ -123,26 +130,24 @@ public sealed partial class GameCanvasView
 
     private async void OnSpritesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // When sprites are added, load their bitmaps
-        if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems != null)
+        switch (e.Action)
         {
-            foreach (PictureBox sprite in e.NewItems)
+            // When sprites are added, load their bitmaps
+            case NotifyCollectionChangedAction.Add when e.NewItems != null:
             {
-                if (string.IsNullOrEmpty(sprite?.ImagePath)) continue;
-
-                // Check if already loaded
-                lock (_lock)
+                foreach (PictureBox sprite in e.NewItems)
                 {
-                    if (_bitmapCache.ContainsKey(sprite.ImagePath)) continue;
-                }
+                    if (string.IsNullOrEmpty(sprite?.ImagePath)) continue;
 
-                try
-                {
+                    // Check if already loaded
+                    lock (_lock)
+                    {
+                        if (_bitmapCache.ContainsKey(sprite.ImagePath)) continue;
+                    }
+
                     var fullPath = Path.IsPathRooted(sprite.ImagePath)
                         ? sprite.ImagePath
                         : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, sprite.ImagePath);
-
-                    Debug.WriteLine($"[DEBUG_LOG] Dynamically loading bitmap: {fullPath}");
 
                     var bitmap = await CanvasBitmap.LoadAsync(InternalCanvas, fullPath);
 
@@ -150,103 +155,69 @@ public sealed partial class GameCanvasView
                     {
                         _bitmapCache[sprite.ImagePath] = bitmap;
                     }
+                }
 
-                    Debug.WriteLine(
-                        $"[DEBUG_LOG] Dynamically loaded bitmap: {sprite.ImagePath}");
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(
-                        $"[DEBUG_LOG] Failed to dynamically load {sprite.ImagePath}: {ex.Message}");
-                }
+                break;
             }
-        }
-        // When sprites are removed, dispose their bitmaps
-        else if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems != null)
-        {
-            foreach (PictureBox sprite in e.OldItems)
+            // When sprites are removed, dispose their bitmaps
+            case NotifyCollectionChangedAction.Remove when e.OldItems != null:
             {
-                if (string.IsNullOrEmpty(sprite?.ImagePath)) continue;
-
-                lock (_lock)
+                foreach (PictureBox sprite in e.OldItems)
                 {
-                    if (_bitmapCache.TryGetValue(sprite.ImagePath, out var bitmap))
+                    if (string.IsNullOrEmpty(sprite?.ImagePath)) continue;
+
+                    lock (_lock)
                     {
+                        if (!_bitmapCache.TryGetValue(sprite.ImagePath, out var bitmap)) continue;
                         bitmap.Dispose();
                         _bitmapCache.Remove(sprite.ImagePath);
-                        Debug.WriteLine($"[DEBUG_LOG] Removed bitmap: {sprite.ImagePath}");
                     }
                 }
+
+                break;
             }
         }
     }
 
     private async Task CreateResourcesAsync(ICanvasAnimatedControl sender)
     {
-        try
+        // Don't clear the cache - this was causing the issue!
+        // Instead, only load bitmaps that aren't already cached
+
+        var sprites = _cachedSprites;
+        if (sprites is not null)
         {
-            Debug.WriteLine("[DEBUG_LOG] CreateResourcesAsync started");
+            Debug.WriteLine($"[DEBUG_LOG] Loading {sprites.Count} sprites");
 
-            // Don't clear the cache - this was causing the issue!
-            // Instead, only load bitmaps that aren't already cached
+            // Create a snapshot to avoid collection modified exceptions
+            var spriteList = sprites.ToArray();
 
-            var sprites = _cachedSprites;
-            if (sprites != null)
+            foreach (var sprite in spriteList)
             {
-                Debug.WriteLine($"[DEBUG_LOG] Loading {sprites.Count} sprites");
+                if (string.IsNullOrEmpty(sprite.ImagePath)) continue;
 
-                // Create a snapshot to avoid collection modified exceptions
-                var spriteList = sprites.ToArray();
-
-                foreach (var sprite in spriteList)
+                // Skip if already loaded
+                bool alreadyLoaded;
+                lock (_lock)
                 {
-                    if (string.IsNullOrEmpty(sprite?.ImagePath)) continue;
-
-                    // Skip if already loaded
-                    bool alreadyLoaded;
-                    lock (_lock)
-                    {
-                        alreadyLoaded = _bitmapCache.ContainsKey(sprite.ImagePath);
-                    }
-
-                    if (alreadyLoaded)
-                    {
-                        Debug.WriteLine(
-                            $"[DEBUG_LOG] Bitmap already cached: {sprite.ImagePath}");
-                        continue;
-                    }
-
-                    try
-                    {
-                        var fullPath = Path.IsPathRooted(sprite.ImagePath)
-                            ? sprite.ImagePath
-                            : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, sprite.ImagePath);
-
-                        Debug.WriteLine($"[DEBUG_LOG] Loading bitmap: {fullPath}");
-
-                        var bitmap = await CanvasBitmap.LoadAsync(sender, fullPath);
-
-                        lock (_lock)
-                        {
-                            _bitmapCache[sprite.ImagePath] = bitmap;
-                        }
-
-                        Debug.WriteLine($"[DEBUG_LOG] Loaded bitmap: {sprite.ImagePath}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine(
-                            $"[DEBUG_LOG] Failed to load {sprite.ImagePath}: {ex.Message}");
-                    }
+                    alreadyLoaded = _bitmapCache.ContainsKey(sprite.ImagePath);
                 }
-            }
 
-            Debug.WriteLine("[DEBUG_LOG] CreateResourcesAsync completed");
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"[DEBUG_LOG] CreateResourcesAsync fatal error: {ex}");
-            throw;
+                if (alreadyLoaded) continue;
+
+                var fullPath = Path.IsPathRooted(sprite.ImagePath)
+                    ? sprite.ImagePath
+                    : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, sprite.ImagePath);
+
+                var bitmap = await CanvasBitmap.LoadAsync(sender, fullPath);
+
+                lock (_lock)
+                {
+                    _bitmapCache[sprite.ImagePath] = bitmap;
+                }
+
+                Debug.WriteLine($"[DEBUG_LOG] Loaded bitmap: {sprite.ImagePath}");
+            }
         }
     }
 
@@ -294,12 +265,10 @@ public sealed partial class GameCanvasView
                                 }
 
                                 // Apply the blend effect
-                                using var effect = new BlendEffect
-                                {
-                                    Background = background,
-                                    Foreground = foreground,
-                                    Mode = sprite.BlendMode.Value
-                                };
+                                using var effect = new BlendEffect();
+                                effect.Background = background;
+                                effect.Foreground = foreground;
+                                effect.Mode = sprite.BlendMode.Value;
 
                                 // Create a new accumulator with the blended result
                                 var newAccumulator = new CanvasRenderTarget(sender, sender.Size);
@@ -317,7 +286,7 @@ public sealed partial class GameCanvasView
                             {
                                 // Draw without blend effect (standard rendering)
                                 // Create new accumulator if it doesn't exist
-                                if (accumulator == null)
+                                if (accumulator is null)
                                 {
                                     accumulator = new CanvasRenderTarget(sender, sender.Size);
                                     using var ds = accumulator.CreateDrawingSession();
@@ -362,7 +331,6 @@ public sealed partial class GameCanvasView
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"[DEBUG_LOG] Draw error: {ex}");
             // Draw error message on screen
             try
             {
