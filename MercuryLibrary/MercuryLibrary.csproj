@@ -15,19 +15,24 @@
         <!-- NuGet Package Properties -->
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>MercuryLibrary</PackageId>
-        <Version>1.0.3</Version>
+        <Version>1.0.5</Version>
         <Authors>Mercury Authors</Authors>
         <Description>A WinUI 3 component library for Mercury projects.</Description>
         <PackageProjectUrl>https://github.com/philb/MercuryLibrary</PackageProjectUrl>
         <RepositoryUrl>https://github.com/philb/MercuryLibrary</RepositoryUrl>
         <PackageTags>WinUI3;WindowsAppSDK;Mercury</PackageTags>
         <Copyright>Copyright © 2026</Copyright>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003"/>
         <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742"/>
         <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.3.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
 </Project>

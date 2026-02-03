@@ -1,14 +1,17 @@
 # MercuryLibrary
 
-A WinUI 3 component library for Mercury projects.
+MercuryLibrary is a specialized WinUI 3 component library designed to simplify the creation of high-performance, interactive graphical applications. It provides a set of tools and controls built on top of Win2D, bridging the gap between standard WinUI controls and the needs of game-like or real-time rendering environments.
+
+The library is particularly useful for developers who need to manage complex sprite-based rendering, coordinate-based positioning, and low-latency update loops within a modern Windows application using MVVM patterns.
 
 ### Version
-Current version: `1.0.2`
+Current version: `1.0.5`
 
 ### Features
 - **GameCanvasView**: A high-performance canvas control for WinUI 3 powered by Win2D, designed for real-time rendering and game-like applications.
-- **UpdateCallback**: A bindable property to hook into the game update loop from your ViewModel.
+- **UpdateCallback**: A bindable property to hook into the game update loop from your ViewModel, allowing for clean MVVM-compliant logic.
 - **PictureBox**: A sprite-like component for `GameCanvasView` supporting positioning (X, Y, Z), viewport clipping, and blend modes.
+- **High Performance**: Leverages Win2D's hardware acceleration for smooth graphics.
 - **WinUI 3 Ready**: Built on the latest Windows App SDK.
 
 ### Installation
@@ -16,7 +19,7 @@ Current version: `1.0.2`
 Add the `MercuryLibrary` project to your solution and reference it, or install the NuGet package:
 
 ```bash
-dotnet add package MercuryLibrary --version 1.0.2
+dotnet add package MercuryLibrary --version 1.0.5
 ```
 
 ### Usage
@@ -31,8 +34,8 @@ xmlns:mercury="using:MercuryLibrary.CanvasComponents"
 Then add the `GameCanvasView`. You can bind the `Sprites` collection and the `UpdateCallback`:
 
 ```xml
-<mercury:GameCanvasView x:Name="GameCanvas" 
-                        UpdateRate="16.66666667" 
+<mercury:GameCanvasView x:Name="GameCanvas"
+                        UpdateRate="16.66666667"
                         Sprites="{x:Bind ViewModel.MySprites, Mode=OneWay}"
                         UpdateCallback="{x:Bind ViewModel.UpdateHandler, Mode=OneWay}" />
 ```
