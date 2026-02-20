@@ -5,7 +5,7 @@ MercuryLibrary is a specialized WinUI 3 component library designed to simplify t
 The library is particularly useful for developers who need to manage complex sprite-based rendering, coordinate-based positioning, and low-latency update loops within a modern Windows application using MVVM patterns.
 
 ### Version
-Current version: `1.0.5`
+Current version: `1.0.6`
 
 ### Features
 - **GameCanvasView**: A high-performance canvas control for WinUI 3 powered by Win2D, designed for real-time rendering and game-like applications.
@@ -19,7 +19,7 @@ Current version: `1.0.5`
 Add the `MercuryLibrary` project to your solution and reference it, or install the NuGet package:
 
 ```bash
-dotnet add package MercuryLibrary --version 1.0.5
+dotnet add package MercuryLibrary --version 1.0.6
 ```
 
 ### Usage

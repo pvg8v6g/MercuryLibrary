@@ -15,7 +15,7 @@
         <!-- NuGet Package Properties -->
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>MercuryLibrary</PackageId>
-        <Version>1.0.5</Version>
+        <Version>1.0.6</Version>
         <Authors>Mercury Authors</Authors>
         <Description>A WinUI 3 component library for Mercury projects.</Description>
         <PackageProjectUrl>https://github.com/philb/MercuryLibrary</PackageProjectUrl>
