@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MercuryLibrary.Extensions;
 
-public static class Extensions
+public static partial class Extensions
 {
     public static bool IsNullOrEmpty([NotNullWhen(false)] this string? value)
     {
