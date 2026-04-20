@@ -9,7 +9,7 @@ update loops within a modern Windows application using MVVM patterns.
 
 ### Version
 
-Current version: `1.0.8`
+Current version: `1.0.9`
 
 ### Features
 
@@ -20,13 +20,25 @@ Current version: `1.0.8`
 - **WinUI 3 Ready**: Built on the latest Windows App SDK.
 - **New String Is Null or Empty Extension**
 - **New Dictionary GetOrDefault Extension**: Safely retrieve values from a dictionary with a default fallback. (v1.0.8)
+ - **New BlendMode enum with attribute mapping (v1.0.9)**: Friendlier `BlendMode` values (e.g., `Multiply`, `Screen`, `Overlay`) map to Win2D's `BlendEffectMode` via a custom `BlendModeAttribute`.
+ - **New EnumExtensions.GetAttribute helper (v1.0.9)**: Utility to read attributes from enum members, used to resolve the underlying `BlendEffectMode` at runtime.
+ - **PictureBox BlendMode API update (v1.0.9)**: `PictureBox.BlendMode` now uses the library’s `BlendMode` enum for clearer, stable public API.
+ - **Rendering pipeline glue for blends (v1.0.9)**: `GameCanvasView` uses the new enum+attribute approach to apply Win2D blend effects during drawing.
+
+### Changes
+
+- 1.0.9
+  - Introduced `Enumerations.BlendMode` with `[BlendModeAttribute]` mapping to Win2D `BlendEffectMode`.
+  - Added `EnumExtensions.GetAttribute<T>` to fetch attributes from enum values.
+  - Updated `ImageComponents.PictureBox.BlendMode` type from `BlendEffectMode?` to `BlendMode?`.
+  - Updated `CanvasComponents.GameCanvasView` to resolve and apply blend effects using the new system.
 
 ### Installation
 
 Add the `MercuryLibrary` project to your solution and reference it, or install the NuGet package:
 
 ```bash
-dotnet add package MercuryLibrary --version 1.0.8
+dotnet add package MercuryLibrary --version 1.0.9
 ```
 
 ### Usage
