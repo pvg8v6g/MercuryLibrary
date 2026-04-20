@@ -1,6 +1,6 @@
-using MercuryLibrary.WinUI3Components;
-using Microsoft.Graphics.Canvas.Effects;
 using Windows.Foundation;
+using MercuryLibrary.Enumerations;
+using MercuryLibrary.WinUI3Components;
 
 namespace MercuryLibrary.ImageComponents;
 
@@ -30,7 +30,7 @@ public class PictureBox : PropertyChangedUpdater
         set => SetField(ref field, value);
     }
 
-    public BlendEffectMode? BlendMode
+    public BlendMode? BlendMode
     {
         get;
         set => SetField(ref field, value);

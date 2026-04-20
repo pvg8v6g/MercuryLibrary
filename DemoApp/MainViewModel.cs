@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using Windows.Foundation;
+using MercuryLibrary.Enumerations;
 using MercuryLibrary.ImageComponents;
 using MercuryLibrary.WinUI3Components;
-using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 
 namespace DemoApp;
@@ -21,7 +21,7 @@ public class MainViewModel : PropertyChangedUpdater
         Sprites.Add(new PictureBox
             { ImagePath = "Graphics/moving.png", X = 200, Y = 200, Z = 1, Viewport = new Rect(48, 0, 48, 48), Opacity = 0.5f });
         Sprites.Add(new PictureBox
-            { ImagePath = "Graphics/over.png", X = 300, Y = 300, Z = 2, BlendMode = BlendEffectMode.LinearDodge });
+            { ImagePath = "Graphics/over.png", X = 300, Y = 300, Z = 2, BlendMode = BlendMode.LinearDodge });
     }
 
     private void OnUpdate(ICanvasAnimatedControl sender, CanvasAnimatedUpdateEventArgs args)

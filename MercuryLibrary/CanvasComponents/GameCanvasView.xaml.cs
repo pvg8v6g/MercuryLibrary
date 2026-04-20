@@ -2,6 +2,8 @@
 using System.Collections.Specialized;
 using System.Diagnostics;
 using Windows.Foundation;
+using MercuryLibrary.Attributes;
+using MercuryLibrary.Extensions;
 using MercuryLibrary.ImageComponents;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Effects;
@@ -243,7 +245,8 @@ public sealed partial class GameCanvasView
                             if (string.IsNullOrEmpty(sprite.ImagePath)) continue;
                             if (!_bitmapCache.TryGetValue(sprite.ImagePath, out var bitmap)) continue;
 
-                            if (sprite.BlendMode is not null)
+                            var blend = sprite.BlendMode?.GetAttribute<BlendModeAttribute>()?.BlendMode;
+                            if (blend is not null)
                             {
                                 // For blend modes, we need to blend with everything drawn so far
                                 // Use the accumulator as the background (or transparent if first sprite)
@@ -268,7 +271,7 @@ public sealed partial class GameCanvasView
                                 using var effect = new BlendEffect();
                                 effect.Background = background;
                                 effect.Foreground = foreground;
-                                effect.Mode = sprite.BlendMode.Value;
+                                effect.Mode = blend.Value;
 
                                 // Create a new accumulator with the blended result
                                 var newAccumulator = new CanvasRenderTarget(sender, sender.Size);
