@@ -9,7 +9,7 @@ update loops within a modern Windows application using MVVM patterns.
 
 ### Version
 
-Current version: `1.0.11`
+Current version: `1.0.14`
 
 ### Features
 
@@ -27,9 +27,22 @@ Current version: `1.0.11`
  - **New PictureBox image-effect properties (v1.0.10)**: `PictureBox` now exposes `ScaleX`/`ScaleY` (default `1.0`), `Rotate` (degrees), `Hue`, `Saturation`, `Contrast`, and `Brightness`, using decimals for percentage-style values (`1.0` = 100%) and neutral color values at `0`.
  - **Effect rendering chain in GameCanvasView (v1.0.10)**: `GameCanvasView` applies a Win2D effect chain (crop → hue → saturation → contrast → exposure → scale/rotate → opacity) per sprite on both the blended and non-blended draw paths.
  - **NuGet now ships the compiled XAML resources (v1.0.11)**: the package includes `MercuryLibrary.pri` alongside the assembly so apps consuming the library via NuGet can load `GameCanvasView` without a `XamlParseException`.
+ - **Thread-safe draw loop (v1.0.12)**: `GameCanvasView` now snapshots the `Sprites` collection before rendering each frame, so mutating the bound collection from the UI thread (e.g. clearing/re-adding sprites) no longer throws `InvalidOperationException: Collection was modified`.
+ - **Optional FPS counter (v1.0.12)**: `GameCanvasView` now exposes a bindable `ShowFps` property (default `false`) that toggles the on-canvas FPS overlay.
+ - **Safe sprite loading before device creation (v1.0.13)**: `GameCanvasView` no longer throws `ArgumentException: The control does not currently have a CanvasDevice associated with it.` when sprites are added to the bound collection before the control has created its Win2D device (e.g. when a popup's canvas is populated as it opens).
+ - **Bindable `ClearColor` (v1.0.14)**: `GameCanvasView` now exposes a bindable `ClearColor` property (default `Black`) so the canvas background color can be chosen by the consumer.
+ - **Anchor overlay (v1.0.14)**: `GameCanvasView` now exposes bindable `AnchorRect` and `AnchorColor` properties to draw a reference rectangle (e.g. a red anchor box) behind all sprites; it is hidden by default (`AnchorColor` defaults to transparent).
 
 ### Changes
 
+- 1.0.14
+  - Added a bindable `ClearColor` property (default `Black`) to `GameCanvasView` for choosing the canvas background color.
+  - Added bindable `AnchorRect`/`AnchorColor` properties to `GameCanvasView` that render a reference rectangle behind the sprites (transparent/off by default).
+- 1.0.13
+  - `GameCanvasView` now guards sprite-bitmap loading in its collection-changed handler with `ReadyToDraw` (and a try/catch), deferring the load to `CreateResources` when the Win2D device isn't available yet. This fixes the `ArgumentException`/"no CanvasDevice associated" crash when the bound `Sprites` collection is populated before the canvas has initialized.
+- 1.0.12
+  - `GameCanvasView` now iterates a snapshot of the `Sprites` collection in its draw loop, preventing "Collection was modified; enumeration operation may not execute" errors (and the associated flicker) when the bound collection is updated from the UI thread.
+  - Added a bindable `ShowFps` property (default `false`) to `GameCanvasView` that controls whether the FPS counter is drawn on the canvas.
 - 1.0.11
   - Fixed packaging so `MercuryLibrary.pri` (the compiled XAML/XBF resources) is included in the NuGet package next to `MercuryLibrary.dll`.
   - Resolves `Microsoft.UI.Xaml.Markup.XamlParseException` thrown from `GameCanvasView.InitializeComponent()` when the library was consumed as a NuGet package instead of a project reference.
@@ -48,7 +61,7 @@ Current version: `1.0.11`
 Add the `MercuryLibrary` project to your solution and reference it, or install the NuGet package:
 
 ```bash
-dotnet add package MercuryLibrary --version 1.0.11
+dotnet add package MercuryLibrary --version 1.0.14
 ```
 
 ### Usage

@@ -11,6 +11,7 @@ using Microsoft.Graphics.Canvas.Effects;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
+using Windows.UI;
 
 namespace MercuryLibrary.CanvasComponents;
 
@@ -58,6 +59,80 @@ public sealed partial class GameCanvasView
     {
         get => (Action<ICanvasAnimatedControl, CanvasAnimatedUpdateEventArgs>?) GetValue(UpdateCallbackProperty);
         set => SetValue(UpdateCallbackProperty, value);
+    }
+
+    public static readonly DependencyProperty ShowFpsProperty = DependencyProperty.Register(
+        nameof(ShowFps),
+        typeof(bool),
+        typeof(GameCanvasView),
+        new PropertyMetadata(false, OnShowFpsChanged));
+
+    private bool _cachedShowFps;
+
+    private static void OnShowFpsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((GameCanvasView) d)._cachedShowFps = (bool) e.NewValue;
+    }
+
+    public bool ShowFps
+    {
+        get => (bool) GetValue(ShowFpsProperty);
+        set => SetValue(ShowFpsProperty, value);
+    }
+
+    public static readonly DependencyProperty ClearColorProperty = DependencyProperty.Register(
+        nameof(ClearColor),
+        typeof(Color),
+        typeof(GameCanvasView),
+        new PropertyMetadata(Colors.Black, OnClearColorChanged));
+
+    private static void OnClearColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((GameCanvasView) d).InternalCanvas.ClearColor = (Color) e.NewValue;
+    }
+
+    public Color ClearColor
+    {
+        get => (Color) GetValue(ClearColorProperty);
+        set => SetValue(ClearColorProperty, value);
+    }
+
+    public static readonly DependencyProperty AnchorRectProperty = DependencyProperty.Register(
+        nameof(AnchorRect),
+        typeof(Rect),
+        typeof(GameCanvasView),
+        new PropertyMetadata(default(Rect), OnAnchorRectChanged));
+
+    private Rect _cachedAnchorRect;
+
+    private static void OnAnchorRectChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((GameCanvasView) d)._cachedAnchorRect = (Rect) e.NewValue;
+    }
+
+    public Rect AnchorRect
+    {
+        get => (Rect) GetValue(AnchorRectProperty);
+        set => SetValue(AnchorRectProperty, value);
+    }
+
+    public static readonly DependencyProperty AnchorColorProperty = DependencyProperty.Register(
+        nameof(AnchorColor),
+        typeof(Color),
+        typeof(GameCanvasView),
+        new PropertyMetadata(Colors.Transparent, OnAnchorColorChanged));
+
+    private Color _cachedAnchorColor = Colors.Transparent;
+
+    private static void OnAnchorColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((GameCanvasView) d)._cachedAnchorColor = (Color) e.NewValue;
+    }
+
+    public Color AnchorColor
+    {
+        get => (Color) GetValue(AnchorColorProperty);
+        set => SetValue(AnchorColorProperty, value);
     }
 
     private readonly Dictionary<string, CanvasBitmap> _bitmapCache = new();
@@ -138,6 +213,12 @@ public sealed partial class GameCanvasView
             // When sprites are added, load their bitmaps
             case NotifyCollectionChangedAction.Add when e.NewItems != null:
             {
+                // If the control hasn't created its Win2D device yet (e.g. sprites are
+                // added before the canvas is loaded/rendered, as happens when a popup's
+                // canvas is populated on open), skip loading here. CreateResourcesAsync
+                // will load every sprite once the device is available.
+                if (!InternalCanvas.ReadyToDraw) break;
+
                 foreach (PictureBox sprite in e.NewItems)
                 {
                     if (string.IsNullOrEmpty(sprite?.ImagePath)) continue;
@@ -152,7 +233,17 @@ public sealed partial class GameCanvasView
                         ? sprite.ImagePath
                         : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, sprite.ImagePath);
 
-                    var bitmap = await CanvasBitmap.LoadAsync(InternalCanvas, fullPath);
+                    CanvasBitmap bitmap;
+                    try
+                    {
+                        bitmap = await CanvasBitmap.LoadAsync(InternalCanvas, fullPath);
+                    }
+                    catch
+                    {
+                        // Device may have been lost between the ready check and the load;
+                        // CreateResourcesAsync will reload the sprite when resources are recreated.
+                        continue;
+                    }
 
                     lock (_lock)
                     {
@@ -230,10 +321,20 @@ public sealed partial class GameCanvasView
         {
             GameDraw?.Invoke(this, args);
 
+            // Draw the anchor overlay (e.g. a reference box) behind all sprites
+            if (_cachedAnchorColor.A > 0 && _cachedAnchorRect is { Width: > 0, Height: > 0 })
+            {
+                args.DrawingSession.FillRectangle(_cachedAnchorRect, _cachedAnchorColor);
+            }
+
             // Use cached sprites to avoid COM exception from accessing dependency property on background thread
             var sprites = _cachedSprites;
             if (sprites is not null)
             {
+                // Snapshot the collection so concurrent UI-thread mutations
+                // (Clear/Add during a rebuild) can't throw "Collection was modified"
+                var spriteSnapshot = sprites.ToArray();
+
                 lock (_lock)
                 {
                     // Create a render target to accumulate sprites for proper blending
@@ -241,7 +342,7 @@ public sealed partial class GameCanvasView
 
                     try
                     {
-                        foreach (var sprite in sprites)
+                        foreach (var sprite in spriteSnapshot)
                         {
                             if (string.IsNullOrEmpty(sprite.ImagePath)) continue;
                             if (!_bitmapCache.TryGetValue(sprite.ImagePath, out var bitmap)) continue;
@@ -325,7 +426,10 @@ public sealed partial class GameCanvasView
                 }
             }
 
-            args.DrawingSession.DrawText($"FPS: {_actualFps:F1}", 10, 40, Colors.Yellow);
+            if (_cachedShowFps)
+            {
+                args.DrawingSession.DrawText($"FPS: {_actualFps:F1}", 10, 40, Colors.Yellow);
+            }
         }
         catch (Exception ex)
         {
