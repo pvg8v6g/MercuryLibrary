@@ -9,7 +9,7 @@ update loops within a modern Windows application using MVVM patterns.
 
 ### Version
 
-Current version: `1.0.14`
+Current version: `1.0.15`
 
 ### Features
 
@@ -32,9 +32,14 @@ Current version: `1.0.14`
  - **Safe sprite loading before device creation (v1.0.13)**: `GameCanvasView` no longer throws `ArgumentException: The control does not currently have a CanvasDevice associated with it.` when sprites are added to the bound collection before the control has created its Win2D device (e.g. when a popup's canvas is populated as it opens).
  - **Bindable `ClearColor` (v1.0.14)**: `GameCanvasView` now exposes a bindable `ClearColor` property (default `Black`) so the canvas background color can be chosen by the consumer.
  - **Anchor overlay (v1.0.14)**: `GameCanvasView` now exposes bindable `AnchorRect` and `AnchorColor` properties to draw a reference rectangle (e.g. a red anchor box) behind all sprites; it is hidden by default (`AnchorColor` defaults to transparent).
+ - **Blend modes composite against the background (v1.0.15)**: `GameCanvasView` now seeds its render accumulator with the `ClearColor` and anchor overlay, so blend-mode sprites blend against the canvas background and the sprites beneath them instead of against transparency (which previously made blended sprites disappear when no opaque sprite was behind them).
+ - **Selection highlight (v1.0.15)**: `GameCanvasView` now exposes bindable `SelectionRect`, `SelectionColor` (default transparent/off) and `SelectionThickness` (default `2`) properties to draw a border rectangle on top of all sprites (e.g. to indicate a selected cell in an editor).
 
 ### Changes
 
+- 1.0.15
+  - `GameCanvasView` seeds its draw accumulator with the `ClearColor` + anchor so blend-mode sprites composite against the background scene (and each other) rather than transparency. Fixes blend modes appearing to "do nothing" when there is no opaque sprite behind the blended sprite.
+  - Added bindable `SelectionRect`/`SelectionColor`/`SelectionThickness` properties to `GameCanvasView` that draw a selection border on top of the rendered sprites (off by default).
 - 1.0.14
   - Added a bindable `ClearColor` property (default `Black`) to `GameCanvasView` for choosing the canvas background color.
   - Added bindable `AnchorRect`/`AnchorColor` properties to `GameCanvasView` that render a reference rectangle behind the sprites (transparent/off by default).
@@ -61,7 +66,7 @@ Current version: `1.0.14`
 Add the `MercuryLibrary` project to your solution and reference it, or install the NuGet package:
 
 ```bash
-dotnet add package MercuryLibrary --version 1.0.14
+dotnet add package MercuryLibrary --version 1.0.15
 ```
 
 ### Usage

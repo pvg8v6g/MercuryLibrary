@@ -86,9 +86,14 @@ public sealed partial class GameCanvasView
         typeof(GameCanvasView),
         new PropertyMetadata(Colors.Black, OnClearColorChanged));
 
+    private Color _cachedClearColor = Colors.Black;
+
     private static void OnClearColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        ((GameCanvasView) d).InternalCanvas.ClearColor = (Color) e.NewValue;
+        var view = (GameCanvasView) d;
+        var color = (Color) e.NewValue;
+        view._cachedClearColor = color;
+        view.InternalCanvas.ClearColor = color;
     }
 
     public Color ClearColor
@@ -133,6 +138,63 @@ public sealed partial class GameCanvasView
     {
         get => (Color) GetValue(AnchorColorProperty);
         set => SetValue(AnchorColorProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectionRectProperty = DependencyProperty.Register(
+        nameof(SelectionRect),
+        typeof(Rect),
+        typeof(GameCanvasView),
+        new PropertyMetadata(default(Rect), OnSelectionRectChanged));
+
+    private Rect _cachedSelectionRect;
+
+    private static void OnSelectionRectChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((GameCanvasView) d)._cachedSelectionRect = (Rect) e.NewValue;
+    }
+
+    public Rect SelectionRect
+    {
+        get => (Rect) GetValue(SelectionRectProperty);
+        set => SetValue(SelectionRectProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectionColorProperty = DependencyProperty.Register(
+        nameof(SelectionColor),
+        typeof(Color),
+        typeof(GameCanvasView),
+        new PropertyMetadata(Colors.Transparent, OnSelectionColorChanged));
+
+    private Color _cachedSelectionColor = Colors.Transparent;
+
+    private static void OnSelectionColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((GameCanvasView) d)._cachedSelectionColor = (Color) e.NewValue;
+    }
+
+    public Color SelectionColor
+    {
+        get => (Color) GetValue(SelectionColorProperty);
+        set => SetValue(SelectionColorProperty, value);
+    }
+
+    public static readonly DependencyProperty SelectionThicknessProperty = DependencyProperty.Register(
+        nameof(SelectionThickness),
+        typeof(double),
+        typeof(GameCanvasView),
+        new PropertyMetadata(2.0, OnSelectionThicknessChanged));
+
+    private float _cachedSelectionThickness = 2.0f;
+
+    private static void OnSelectionThicknessChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        ((GameCanvasView) d)._cachedSelectionThickness = (float) (double) e.NewValue;
+    }
+
+    public double SelectionThickness
+    {
+        get => (double) GetValue(SelectionThicknessProperty);
+        set => SetValue(SelectionThicknessProperty, value);
     }
 
     private readonly Dictionary<string, CanvasBitmap> _bitmapCache = new();
@@ -321,27 +383,33 @@ public sealed partial class GameCanvasView
         {
             GameDraw?.Invoke(this, args);
 
-            // Draw the anchor overlay (e.g. a reference box) behind all sprites
-            if (_cachedAnchorColor.A > 0 && _cachedAnchorRect is { Width: > 0, Height: > 0 })
-            {
-                args.DrawingSession.FillRectangle(_cachedAnchorRect, _cachedAnchorColor);
-            }
-
             // Use cached sprites to avoid COM exception from accessing dependency property on background thread
             var sprites = _cachedSprites;
-            if (sprites is not null)
+
+            lock (_lock)
             {
-                // Snapshot the collection so concurrent UI-thread mutations
-                // (Clear/Add during a rebuild) can't throw "Collection was modified"
-                var spriteSnapshot = sprites.ToArray();
-
-                lock (_lock)
+                // Seed the accumulator with the background "scene": the clear color and the
+                // anchor overlay. This way blend-mode sprites composite against the actual
+                // background (e.g. the grey canvas) as well as the sprites beneath them,
+                // instead of blending against transparency and disappearing.
+                var accumulator = new CanvasRenderTarget(sender, sender.Size);
+                using (var seedDs = accumulator.CreateDrawingSession())
                 {
-                    // Create a render target to accumulate sprites for proper blending
-                    CanvasRenderTarget? accumulator = null;
-
-                    try
+                    seedDs.Clear(_cachedClearColor);
+                    if (_cachedAnchorColor.A > 0 && _cachedAnchorRect is { Width: > 0, Height: > 0 })
                     {
+                        seedDs.FillRectangle(_cachedAnchorRect, _cachedAnchorColor);
+                    }
+                }
+
+                try
+                {
+                    if (sprites is not null)
+                    {
+                        // Snapshot the collection so concurrent UI-thread mutations
+                        // (Clear/Add during a rebuild) can't throw "Collection was modified"
+                        var spriteSnapshot = sprites.ToArray();
+
                         foreach (var sprite in spriteSnapshot)
                         {
                             if (string.IsNullOrEmpty(sprite.ImagePath)) continue;
@@ -350,16 +418,7 @@ public sealed partial class GameCanvasView
                             var blend = sprite.BlendMode?.GetAttribute<BlendModeAttribute>()?.BlendMode;
                             if (blend is not null)
                             {
-                                // For blend modes, we need to blend with everything drawn so far
-                                // Use the accumulator as the background (or transparent if first sprite)
-                                using var background = accumulator ?? new CanvasRenderTarget(sender, sender.Size);
-                                if (accumulator == null)
-                                {
-                                    using var bgDs = background.CreateDrawingSession();
-                                    bgDs.Clear(Colors.Transparent);
-                                }
-
-                                // Create a foreground render target with the sprite positioned correctly
+                                // Blend this sprite against everything accumulated so far (the scene)
                                 using var foreground = new CanvasRenderTarget(sender, sender.Size);
                                 using (var fgDs = foreground.CreateDrawingSession())
                                 {
@@ -367,63 +426,45 @@ public sealed partial class GameCanvasView
                                     DrawSprite(fgDs, sender, bitmap, sprite);
                                 }
 
-                                // Apply the blend effect
-                                using var effect = new BlendEffect();
-                                effect.Background = background;
-                                effect.Foreground = foreground;
-                                effect.Mode = blend.Value;
+                                using var effect = new BlendEffect
+                                {
+                                    Background = accumulator,
+                                    Foreground = foreground,
+                                    Mode = blend.Value
+                                };
 
-                                // Create a new accumulator with the blended result
-                                var newAccumulator = new CanvasRenderTarget(sender, sender.Size);
-                                using (var ds = newAccumulator.CreateDrawingSession())
+                                var blended = new CanvasRenderTarget(sender, sender.Size);
+                                using (var ds = blended.CreateDrawingSession())
                                 {
                                     ds.Clear(Colors.Transparent);
                                     ds.DrawImage(effect);
                                 }
 
-                                // Dispose old accumulator and replace with new one
-                                accumulator?.Dispose();
-                                accumulator = newAccumulator;
+                                accumulator.Dispose();
+                                accumulator = blended;
                             }
                             else
                             {
-                                // Draw without blend effect (standard rendering)
-                                // Create new accumulator if it doesn't exist
-                                if (accumulator is null)
-                                {
-                                    accumulator = new CanvasRenderTarget(sender, sender.Size);
-                                    using var ds = accumulator.CreateDrawingSession();
-                                    ds.Clear(Colors.Transparent);
-                                    DrawSprite(ds, sender, bitmap, sprite);
-                                }
-                                else
-                                {
-                                    // Add to existing accumulator
-                                    var newAccumulator = new CanvasRenderTarget(sender, sender.Size);
-                                    using (var ds = newAccumulator.CreateDrawingSession())
-                                    {
-                                        ds.Clear(Colors.Transparent);
-                                        ds.DrawImage(accumulator);
-                                        DrawSprite(ds, sender, bitmap, sprite);
-                                    }
-
-                                    accumulator.Dispose();
-                                    accumulator = newAccumulator;
-                                }
+                                // Standard rendering: draw straight onto the accumulated scene
+                                using var ds = accumulator.CreateDrawingSession();
+                                DrawSprite(ds, sender, bitmap, sprite);
                             }
                         }
+                    }
 
-                        // Draw the final accumulated result to the screen
-                        if (accumulator != null)
-                        {
-                            args.DrawingSession.DrawImage(accumulator);
-                        }
-                    }
-                    finally
-                    {
-                        accumulator?.Dispose();
-                    }
+                    // Draw the final accumulated result to the screen
+                    args.DrawingSession.DrawImage(accumulator);
                 }
+                finally
+                {
+                    accumulator.Dispose();
+                }
+            }
+
+            // Draw the selection highlight on top of everything else
+            if (_cachedSelectionColor.A > 0 && _cachedSelectionRect is { Width: > 0, Height: > 0 })
+            {
+                args.DrawingSession.DrawRectangle(_cachedSelectionRect, _cachedSelectionColor, _cachedSelectionThickness);
             }
 
             if (_cachedShowFps)
