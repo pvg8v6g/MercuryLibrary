@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Numerics;
 using Windows.Foundation;
 using MercuryLibrary.Attributes;
 using MercuryLibrary.Extensions;
@@ -262,9 +263,7 @@ public sealed partial class GameCanvasView
                                 using (var fgDs = foreground.CreateDrawingSession())
                                 {
                                     fgDs.Clear(Colors.Transparent);
-                                    fgDs.DrawImage(bitmap, sprite.X, sprite.Y,
-                                        sprite.Viewport ?? new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height),
-                                        sprite.Opacity);
+                                    DrawSprite(fgDs, sender, bitmap, sprite);
                                 }
 
                                 // Apply the blend effect
@@ -294,9 +293,7 @@ public sealed partial class GameCanvasView
                                     accumulator = new CanvasRenderTarget(sender, sender.Size);
                                     using var ds = accumulator.CreateDrawingSession();
                                     ds.Clear(Colors.Transparent);
-                                    ds.DrawImage(bitmap, sprite.X, sprite.Y,
-                                        sprite.Viewport ?? new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height),
-                                        sprite.Opacity);
+                                    DrawSprite(ds, sender, bitmap, sprite);
                                 }
                                 else
                                 {
@@ -306,9 +303,7 @@ public sealed partial class GameCanvasView
                                     {
                                         ds.Clear(Colors.Transparent);
                                         ds.DrawImage(accumulator);
-                                        ds.DrawImage(bitmap, sprite.X, sprite.Y,
-                                            sprite.Viewport ?? new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height),
-                                            sprite.Opacity);
+                                        DrawSprite(ds, sender, bitmap, sprite);
                                     }
 
                                     accumulator.Dispose();
@@ -342,6 +337,109 @@ public sealed partial class GameCanvasView
             catch
             {
                 // If we can't even draw the error, just ignore
+            }
+        }
+    }
+
+    private static void DrawSprite(CanvasDrawingSession session, ICanvasResourceCreator sender, CanvasBitmap bitmap,
+        PictureBox sprite)
+    {
+        var viewport = sprite.Viewport ?? new Rect(0, 0, bitmap.Size.Width, bitmap.Size.Height);
+        var disposables = new List<IDisposable>();
+
+        try
+        {
+            // Normalize the (possibly cropped) source to a 0,0 origin so transforms operate on a known size
+            var cropped = new CanvasRenderTarget(sender, (float) viewport.Width, (float) viewport.Height, bitmap.Dpi);
+            disposables.Add(cropped);
+            using (var croppedSession = cropped.CreateDrawingSession())
+            {
+                croppedSession.Clear(Colors.Transparent);
+                croppedSession.DrawImage(bitmap, new Rect(0, 0, viewport.Width, viewport.Height), viewport);
+            }
+
+            ICanvasImage image = cropped;
+
+            // Color adjustments (neutral values are 0, matching the AnimationEffect defaults)
+            if (sprite.Hue != 0.0f)
+            {
+                var hue = new HueRotationEffect
+                {
+                    Source = image,
+                    Angle = sprite.Hue * MathF.PI
+                };
+                disposables.Add(hue);
+                image = hue;
+            }
+
+            if (sprite.Saturation != 0.0f)
+            {
+                var saturation = new SaturationEffect
+                {
+                    Source = image,
+                    Saturation = Math.Clamp(1.0f + sprite.Saturation, 0.0f, 1.0f)
+                };
+                disposables.Add(saturation);
+                image = saturation;
+            }
+
+            if (sprite.Contrast != 0.0f)
+            {
+                var contrast = new ContrastEffect
+                {
+                    Source = image,
+                    Contrast = Math.Clamp(sprite.Contrast, -1.0f, 1.0f)
+                };
+                disposables.Add(contrast);
+                image = contrast;
+            }
+
+            if (sprite.Brightness != 0.0f)
+            {
+                var brightness = new ExposureEffect
+                {
+                    Source = image,
+                    Exposure = sprite.Brightness
+                };
+                disposables.Add(brightness);
+                image = brightness;
+            }
+
+            // Scale and rotation about the sprite center
+            if (sprite.ScaleX != 1.0f || sprite.ScaleY != 1.0f || sprite.Rotate != 0.0f)
+            {
+                var center = new Vector2((float) (viewport.Width / 2.0), (float) (viewport.Height / 2.0));
+                var matrix = Matrix3x2.CreateScale(sprite.ScaleX, sprite.ScaleY, center) *
+                             Matrix3x2.CreateRotation(sprite.Rotate * MathF.PI / 180.0f, center);
+
+                var transform = new Transform2DEffect
+                {
+                    Source = image,
+                    TransformMatrix = matrix
+                };
+                disposables.Add(transform);
+                image = transform;
+            }
+
+            // Opacity (1.0 = 100%)
+            if (sprite.Opacity != 1.0f)
+            {
+                var opacity = new OpacityEffect
+                {
+                    Source = image,
+                    Opacity = Math.Clamp(sprite.Opacity, 0.0f, 1.0f)
+                };
+                disposables.Add(opacity);
+                image = opacity;
+            }
+
+            session.DrawImage(image, new Vector2(sprite.X, sprite.Y));
+        }
+        finally
+        {
+            for (var i = disposables.Count - 1; i >= 0; i--)
+            {
+                disposables[i].Dispose();
             }
         }
     }

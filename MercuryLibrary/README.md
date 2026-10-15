@@ -9,13 +9,13 @@ update loops within a modern Windows application using MVVM patterns.
 
 ### Version
 
-Current version: `1.0.9`
+Current version: `1.0.10`
 
 ### Features
 
 - **GameCanvasView**: A high-performance canvas control for WinUI 3 powered by Win2D, designed for real-time rendering and game-like applications.
 - **UpdateCallback**: A bindable property to hook into the game update loop from your ViewModel, allowing for clean MVVM-compliant logic.
-- **PictureBox**: A sprite-like component for `GameCanvasView` supporting positioning (X, Y, Z), viewport clipping, and blend modes.
+- **PictureBox**: A sprite-like component for `GameCanvasView` supporting positioning (X, Y, Z), viewport clipping, blend modes, and image effects (scale, rotation, hue, saturation, contrast, brightness, opacity).
 - **High Performance**: Leverages Win2D's hardware acceleration for smooth graphics.
 - **WinUI 3 Ready**: Built on the latest Windows App SDK.
 - **New String Is Null or Empty Extension**
@@ -24,9 +24,15 @@ Current version: `1.0.9`
  - **New EnumExtensions.GetAttribute helper (v1.0.9)**: Utility to read attributes from enum members, used to resolve the underlying `BlendEffectMode` at runtime.
  - **PictureBox BlendMode API update (v1.0.9)**: `PictureBox.BlendMode` now uses the library’s `BlendMode` enum for clearer, stable public API.
  - **Rendering pipeline glue for blends (v1.0.9)**: `GameCanvasView` uses the new enum+attribute approach to apply Win2D blend effects during drawing.
+ - **New PictureBox image-effect properties (v1.0.10)**: `PictureBox` now exposes `ScaleX`/`ScaleY` (default `1.0`), `Rotate` (degrees), `Hue`, `Saturation`, `Contrast`, and `Brightness`, using decimals for percentage-style values (`1.0` = 100%) and neutral color values at `0`.
+ - **Effect rendering chain in GameCanvasView (v1.0.10)**: `GameCanvasView` applies a Win2D effect chain (crop → hue → saturation → contrast → exposure → scale/rotate → opacity) per sprite on both the blended and non-blended draw paths.
 
 ### Changes
 
+- 1.0.10
+  - Added `ImageComponents.PictureBox` image-effect properties: `ScaleX`, `ScaleY`, `Rotate`, `Hue`, `Saturation`, `Contrast`, and `Brightness`.
+  - Percentage-style values use decimals (`1.0` = 100%); neutral color values default to `0`.
+  - Updated `CanvasComponents.GameCanvasView` to render each sprite through a Win2D effect chain (crop → hue → saturation → contrast → exposure → scale/rotate → opacity) on both the blended and non-blended draw paths.
 - 1.0.9
   - Introduced `Enumerations.BlendMode` with `[BlendModeAttribute]` mapping to Win2D `BlendEffectMode`.
   - Added `EnumExtensions.GetAttribute<T>` to fetch attributes from enum values.
@@ -38,7 +44,7 @@ Current version: `1.0.9`
 Add the `MercuryLibrary` project to your solution and reference it, or install the NuGet package:
 
 ```bash
-dotnet add package MercuryLibrary --version 1.0.9
+dotnet add package MercuryLibrary --version 1.0.10
 ```
 
 ### Usage

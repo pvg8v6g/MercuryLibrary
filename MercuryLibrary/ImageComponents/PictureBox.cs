@@ -42,6 +42,48 @@ public class PictureBox : PropertyChangedUpdater
         set => SetField(ref field, value);
     } = 1.0f;
 
+    public float ScaleX
+    {
+        get;
+        set => SetField(ref field, value);
+    } = 1.0f;
+
+    public float ScaleY
+    {
+        get;
+        set => SetField(ref field, value);
+    } = 1.0f;
+
+    public float Rotate
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public float Hue
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public float Contrast
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public float Saturation
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public float Brightness
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     public Rect? Viewport
     {
         get;

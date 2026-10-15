@@ -7,13 +7,72 @@
         mc:Ignorable="d"
         Title="Mercury Library Demo App">
 
-    <!-- <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center"> -->
-    <!--     <Button x:Name="myButton" Click="myButton_Click">Click Me</Button> -->
-    <!-- </StackPanel> -->
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <ScrollViewer Grid.Column="0"
+                      Padding="16"
+                      Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Image Effect Tester"
+                           Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+                <TextBlock Text="Position X" />
+                <Slider Minimum="0" Maximum="800"
+                        Value="{x:Bind ViewModel.X, Mode=TwoWay}" />
+
+                <TextBlock Text="Position Y" />
+                <Slider Minimum="0" Maximum="600"
+                        Value="{x:Bind ViewModel.Y, Mode=TwoWay}" />
+
+                <TextBlock Text="Opacity (1.0 = 100%)" />
+                <Slider Minimum="0" Maximum="1" StepFrequency="0.01"
+                        Value="{x:Bind ViewModel.Opacity, Mode=TwoWay}" />
+
+                <TextBlock Text="Scale X (1.0 = 100%)" />
+                <Slider Minimum="0" Maximum="4" StepFrequency="0.05"
+                        Value="{x:Bind ViewModel.ScaleX, Mode=TwoWay}" />
+
+                <TextBlock Text="Scale Y (1.0 = 100%)" />
+                <Slider Minimum="0" Maximum="4" StepFrequency="0.05"
+                        Value="{x:Bind ViewModel.ScaleY, Mode=TwoWay}" />
+
+                <TextBlock Text="Rotate (degrees)" />
+                <Slider Minimum="-360" Maximum="360" StepFrequency="1"
+                        Value="{x:Bind ViewModel.Rotate, Mode=TwoWay}" />
+
+                <TextBlock Text="Hue" />
+                <Slider Minimum="-1" Maximum="1" StepFrequency="0.01"
+                        Value="{x:Bind ViewModel.Hue, Mode=TwoWay}" />
+
+                <TextBlock Text="Saturation" />
+                <Slider Minimum="-1" Maximum="1" StepFrequency="0.01"
+                        Value="{x:Bind ViewModel.Saturation, Mode=TwoWay}" />
+
+                <TextBlock Text="Contrast" />
+                <Slider Minimum="-1" Maximum="1" StepFrequency="0.01"
+                        Value="{x:Bind ViewModel.Contrast, Mode=TwoWay}" />
+
+                <TextBlock Text="Brightness" />
+                <Slider Minimum="-2" Maximum="2" StepFrequency="0.05"
+                        Value="{x:Bind ViewModel.Brightness, Mode=TwoWay}" />
+
+                <CheckBox Content="Use Blend Mode"
+                          IsChecked="{x:Bind ViewModel.UseBlend, Mode=TwoWay}" />
+
+                <TextBlock Text="Blend Mode" />
+                <ComboBox HorizontalAlignment="Stretch"
+                          ItemsSource="{x:Bind ViewModel.BlendModes}"
+                          SelectedItem="{x:Bind ViewModel.SelectedBlendMode, Mode=TwoWay}" />
+            </StackPanel>
+        </ScrollViewer>
+
         <mercury:GameCanvasView x:Name="GameCanvas"
+                                Grid.Column="1"
                                 UpdateRate="16.66666667"
-                                Sprites="{x:Bind ViewModel.Sprites, Mode=OneWay}"
-                                UpdateCallback="{x:Bind ViewModel.UpdateHandler, Mode=OneWay}" />
+                                Sprites="{x:Bind ViewModel.Sprites, Mode=OneWay}" />
     </Grid>
 </Window>
