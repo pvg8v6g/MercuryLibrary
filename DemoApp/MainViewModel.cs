@@ -23,7 +23,7 @@ public class MainViewModel : PropertyChangedUpdater
 
     public double X
     {
-        get => _sprite.X;
+        get;
         set
         {
             if (SetField(ref field, value)) _sprite.X = (int) value;
@@ -32,7 +32,7 @@ public class MainViewModel : PropertyChangedUpdater
 
     public double Y
     {
-        get => _sprite.Y;
+        get;
         set
         {
             if (SetField(ref field, value)) _sprite.Y = (int) value;
@@ -41,7 +41,7 @@ public class MainViewModel : PropertyChangedUpdater
 
     public double Opacity
     {
-        get => _sprite.Opacity;
+        get;
         set
         {
             if (SetField(ref field, value)) _sprite.Opacity = (float) value;
@@ -50,7 +50,7 @@ public class MainViewModel : PropertyChangedUpdater
 
     public double ScaleX
     {
-        get => _sprite.ScaleX;
+        get;
         set
         {
             if (SetField(ref field, value)) _sprite.ScaleX = (float) value;
@@ -59,7 +59,7 @@ public class MainViewModel : PropertyChangedUpdater
 
     public double ScaleY
     {
-        get => _sprite.ScaleY;
+        get;
         set
         {
             if (SetField(ref field, value)) _sprite.ScaleY = (float) value;
@@ -68,7 +68,7 @@ public class MainViewModel : PropertyChangedUpdater
 
     public double Rotate
     {
-        get => _sprite.Rotate;
+        get;
         set
         {
             if (SetField(ref field, value)) _sprite.Rotate = (float) value;
@@ -77,7 +77,7 @@ public class MainViewModel : PropertyChangedUpdater
 
     public double Hue
     {
-        get => _sprite.Hue;
+        get;
         set
         {
             if (SetField(ref field, value)) _sprite.Hue = (float) value;
@@ -86,7 +86,7 @@ public class MainViewModel : PropertyChangedUpdater
 
     public double Contrast
     {
-        get => _sprite.Contrast;
+        get;
         set
         {
             if (SetField(ref field, value)) _sprite.Contrast = (float) value;
@@ -95,7 +95,7 @@ public class MainViewModel : PropertyChangedUpdater
 
     public double Saturation
     {
-        get => _sprite.Saturation;
+        get;
         set
         {
             if (SetField(ref field, value)) _sprite.Saturation = (float) value;
@@ -104,7 +104,7 @@ public class MainViewModel : PropertyChangedUpdater
 
     public double Brightness
     {
-        get => _sprite.Brightness;
+        get;
         set
         {
             if (SetField(ref field, value)) _sprite.Brightness = (float) value;
