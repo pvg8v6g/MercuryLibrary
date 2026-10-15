@@ -9,7 +9,7 @@ update loops within a modern Windows application using MVVM patterns.
 
 ### Version
 
-Current version: `1.0.10`
+Current version: `1.0.11`
 
 ### Features
 
@@ -26,9 +26,13 @@ Current version: `1.0.10`
  - **Rendering pipeline glue for blends (v1.0.9)**: `GameCanvasView` uses the new enum+attribute approach to apply Win2D blend effects during drawing.
  - **New PictureBox image-effect properties (v1.0.10)**: `PictureBox` now exposes `ScaleX`/`ScaleY` (default `1.0`), `Rotate` (degrees), `Hue`, `Saturation`, `Contrast`, and `Brightness`, using decimals for percentage-style values (`1.0` = 100%) and neutral color values at `0`.
  - **Effect rendering chain in GameCanvasView (v1.0.10)**: `GameCanvasView` applies a Win2D effect chain (crop → hue → saturation → contrast → exposure → scale/rotate → opacity) per sprite on both the blended and non-blended draw paths.
+ - **NuGet now ships the compiled XAML resources (v1.0.11)**: the package includes `MercuryLibrary.pri` alongside the assembly so apps consuming the library via NuGet can load `GameCanvasView` without a `XamlParseException`.
 
 ### Changes
 
+- 1.0.11
+  - Fixed packaging so `MercuryLibrary.pri` (the compiled XAML/XBF resources) is included in the NuGet package next to `MercuryLibrary.dll`.
+  - Resolves `Microsoft.UI.Xaml.Markup.XamlParseException` thrown from `GameCanvasView.InitializeComponent()` when the library was consumed as a NuGet package instead of a project reference.
 - 1.0.10
   - Added `ImageComponents.PictureBox` image-effect properties: `ScaleX`, `ScaleY`, `Rotate`, `Hue`, `Saturation`, `Contrast`, and `Brightness`.
   - Percentage-style values use decimals (`1.0` = 100%); neutral color values default to `0`.
@@ -44,7 +48,7 @@ Current version: `1.0.10`
 Add the `MercuryLibrary` project to your solution and reference it, or install the NuGet package:
 
 ```bash
-dotnet add package MercuryLibrary --version 1.0.10
+dotnet add package MercuryLibrary --version 1.0.11
 ```
 
 ### Usage

@@ -15,7 +15,7 @@
         <!-- NuGet Package Properties -->
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <PackageId>MercuryLibrary</PackageId>
-        <Version>1.0.10</Version>
+        <Version>1.0.11</Version>
         <Authors>Mercury Authors</Authors>
         <Description>A WinUI 3 component library for Mercury projects.</Description>
         <PackageProjectUrl>https://github.com/philb/MercuryLibrary</PackageProjectUrl>
@@ -36,5 +36,25 @@
     <ItemGroup>
         <None Include="README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
+
+    <!--
+        WinUI 3 control libraries compile their XAML into a .pri resource file.
+        The default NuGet pack does not include it, so consuming apps cannot resolve
+        the embedded XAML at runtime (XamlParseException in InitializeComponent).
+        Pack the generated MercuryLibrary.pri next to the dll in lib\<tfm>\ so the
+        consuming app merges it into its own resources.pri at build time.
+    -->
+    <PropertyGroup>
+        <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);IncludePriInPackage</TargetsForTfmSpecificContentInPackage>
+    </PropertyGroup>
+
+    <Target Name="IncludePriInPackage">
+        <ItemGroup>
+            <TfmSpecificPackageFile Include="$(TargetDir)$(AssemblyName).pri"
+                                    Condition="Exists('$(TargetDir)$(AssemblyName).pri')">
+                <PackagePath>lib\net10.0-windows10.0.19041\</PackagePath>
+            </TfmSpecificPackageFile>
+        </ItemGroup>
+    </Target>
 
 </Project>
